@@ -13,6 +13,3 @@ class Panda
 	end
 
 end
-
-ivo = Panda.new("Ivo", "ivo@pandamail.com", "male")
-puts ivo.female?
