@@ -12,4 +12,15 @@ class Panda
 		!male?
 	end
 
+	def to_s
+		
+	end
+
+	def = (other)
+		return true if self.name == other.name && 
+		   			  self.email == other.email &&
+		   			  self.gender == other.gender
+		false
+	end
 end
+
