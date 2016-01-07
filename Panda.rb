@@ -14,15 +14,15 @@ class Panda
 	end
 
 	def to_s
-		
+
 	end
 
-	def == (other)
-		return true if name == other.name && email == other.email && gender == other.gender
+	def ==(other)
+		return true if email == other.email
 		false
 	end
-end
 
-ivo = Panda.new("Ivo", "ivo@pandamail.com", "male")
-ivo2 = Panda.new("Ivo2", "ivo@pandamail.com", "male")
-puts ivo == ivo2
+	def hash
+		email.hash
+	end
+end
