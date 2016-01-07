@@ -13,6 +13,11 @@ class Panda
 		!male?
 	end
 
+	def ==(other)
+		return true if email == other.email
+		false
+	end
+
 	def hash
 		email.hash
 	end
