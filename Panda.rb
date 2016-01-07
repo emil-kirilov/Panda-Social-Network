@@ -1,4 +1,5 @@
 class Panda
+	attr_reader :name, :email, :gender
 	def initialize(name, email, gender)
 		@name, @email, @gender = name, email, gender
 	end
@@ -16,11 +17,12 @@ class Panda
 		
 	end
 
-	def = (other)
-		return true if self.name == other.name && 
-		   			  self.email == other.email &&
-		   			  self.gender == other.gender
+	def == (other)
+		return true if name == other.name && email == other.email && gender == other.gender
 		false
 	end
 end
 
+ivo = Panda.new("Ivo", "ivo@pandamail.com", "male")
+ivo2 = Panda.new("Ivo2", "ivo@pandamail.com", "male")
+puts ivo == ivo2
