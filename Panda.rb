@@ -51,6 +51,7 @@ class PandaSocialNetwork
 	
 	def make_friends(panda1, panda2) 
 		#makes the two pandas friends. Raise PandasAlreadyFriends if they are already friends. The friendship is two-ways - panda1 is a friend with panda2 and panda2 is a friend with panda1. If panda1 or panda2 are not members of the network, add them!
+		raise 'PandasAlreadyFriends' if are_friends(panda1, panda2)
 		panda_book[panda1.email] = Array.new unless panda_book.has_key? panda1.email			
 		panda_book[panda2.email] = Array.new unless panda_book.has_key? panda2.email
 
