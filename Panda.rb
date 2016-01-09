@@ -13,6 +13,16 @@ class Panda
 		!male?
 	end
 
+	def ==(other)
+		return true if email == other.email
+		false
+	end
+
+	def eql?(other)
+		return true if email == other.email
+		false
+	end
+
 	def hash
 		email.hash
 	end
@@ -21,6 +31,7 @@ class Panda
 		"Hello my name is #{name}. I am a healthy #{gender} individual so write to me on my email: #{email} "
 	end
 
+	alias_method :eql?, :==
 end
 
 class PandaSocialNetwork
@@ -32,7 +43,7 @@ class PandaSocialNetwork
 
 	def add_panda(panda)
 		# this method adds a panda to the social network. The panda has 0 friends for now. If the panda is already in the network, raise an PandaAlreadyThere error.
-		if panda_book.has_key? panda.email
+		if has_panda panda
 			raise "There's already such panda in the network"
 		else
 			#trqbva da precenim kakvo da izpozlvame za kluch 
@@ -50,27 +61,32 @@ class PandaSocialNetwork
 	end
 	
 	def make_friends(panda1, panda2) 
-		#makes the two pandas friends. Raise PandasAlreadyFriends if they are already friends. The friendship is two-ways - panda1 is a friend with panda2 and panda2 is a friend with panda1. If panda1 or panda2 are not members of the network, add them!
+		#makes the two pandas friends. Raise PandasAlreadyFriends if they are already friends. The friendship is two-ways - panda1 is a friend with panda2 and panda2 is a friend with panda1. 
+		#If panda1 or panda2 are not members of the network, add them!
 		raise 'PandasAlreadyFriends' if are_friends(panda1, panda2)
-		panda_book[panda1.email] = Array.new unless panda_book.has_key? panda1.email			
-		panda_book[panda2.email] = Array.new unless panda_book.has_key? panda2.email
+
+		panda_book[panda1.email] = Array.new if !has_panda panda1			
+		panda_book[panda2.email] = Array.new if !has_panda panda2
 
 		panda_book[panda1.email].push panda2
 		panda_book[panda2.email].push panda1
-
+		
 		panda_book
 	end
 	
 	def are_friends(panda1, panda2) 
 		#- returns true if the pandas are friends. Otherwise, false
 		are_friends = false
+		panda_book[panda1.email] = Array.new if !has_panda panda1
+		panda_book[panda2.email] = Array.new if !has_panda panda2
+		
 		are_friends = true if panda_book[panda1.email].include? panda2
 		are_friends
 	end
 
 	def friends_of(panda)
 		#- returns a list of Panda with the friends of the given panda. Returns false if the panda is not a member of the network.
-		if panda_book.has_key? panda.email
+		if !has_panda panda
 			panda_book[panda.email]
 		else
 			return false 
@@ -82,6 +98,31 @@ class PandaSocialNetwork
 		#Otherwise, count the number of friends you need to go through from panda in order to get to panda2. 
 		#If they are not connected at all, return -1! 
 		#Return false if one of the pandas are not member of the network.
+		return false if !has_panda panda1 or !has_panda panda2
+		return 1 if are_friends(panda1, panda2)
+		return -1 if  panda_book[panda1.email].length == 0 or panda_book[panda2.email].length == 0
+		
+		q = Queue.new
+
+		visited_pandas = []
+		level = -1
+		boolean = true
+		last_panda_of_current_level = Panda.new('empty','shit','panda')
+		q.push(panda1)
+		while !q.empty?
+			if boolean
+				last_panda_of_current_level = q.last
+				level += 1
+				boolean = false
+			end
+			current_panda = q.pop
+			boolean = true if current_panda == last_panda_of_current_level
+			visited_pandas.push(current_panda)
+			q.push(panda_book[current_panda.email] - visited_pandas).flatten!
+			visited_pandas.push(panda_book[current_panda.email].flatten!)
+			return level if visited_pandas.include? panda2
+		end
+=begin
 		return false unless panda_book.has_key? panda1.email or panda_book.has_key? panda2.email
 		return 1 if are_friends(panda1, panda2)
 		return -1 if  panda_book[panda1.email].length == 0 or panda_book[panda2.email].length == 0
@@ -127,6 +168,7 @@ class PandaSocialNetwork
 				end
 			end
 		end
+=end
 	end
 	
 	def are_connected(panda1, panda2) 
@@ -144,22 +186,31 @@ class PandaSocialNetwork
 	end
 end
 
+class Queue
+	attr_accessor :queue
+	def initialize
+		@queue = []
+	end
 
-ivo = Panda.new("Ivo", "ivo", "male")
-pivo = Panda.new("pivo", "pivo", "male")
-PSN = PandaSocialNetwork.new
-p PSN.add_panda(ivo)
-p PSN.add_panda(pivo)
-p PSN.has_panda(ivo)
-p PSN.has_panda(pivo)
-jena1 = Panda.new("jena1", "jena1", "female")
-jena2 = Panda.new("jena2", "jena2", "female")
-PSN.make_friends(jena1, pivo)
-PSN.make_friends(jena1, ivo)
-PSN.make_friends(jena2, ivo)
-p PSN.connection_level(jena2,pivo)
-jena3 = Panda.new("jena3", "jena3", "female")
-PSN.add_panda(jena3)
-p PSN.connection_level(jena3,pivo)
-p PSN.are_connected(jena3,pivo) 
-p PSN.are_connected(jena2,pivo) 
+	def push(panda)
+		queue.push(panda)
+	end
+
+	def pop
+		if empty?
+			raise 'Queue is empty!'
+		else
+			queue.shift
+		end
+	end
+
+	def empty?
+		boolean = true
+		boolean = false if queue.length > 0
+		boolean
+	end
+
+	def last
+		queue[queue.length - 1] if !empty?
+	end
+end
