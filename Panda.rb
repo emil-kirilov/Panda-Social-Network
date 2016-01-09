@@ -183,6 +183,20 @@ class PandaSocialNetwork
 	def how_many_gender_in_network(level, panda, gender) 
 		#returns the number of gender pandas (male of female) that in the panda network in that many levels deep.
 		# If level == 2, we will have to look in all friends of panda and all of their friends too. And count
+
+		friends = panda_book[panda.email]
+		counter_gender = 0
+		while level > 1
+			friends.each do |friend|
+				friends = friends | panda_book[friend.email]
+			end	
+				level -= 1
+		end
+		friends.each do |friend|
+			counter_gender +=1 if friend.gender == gender
+		end
+
+		counter_gender
 	end
 end
 
