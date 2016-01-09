@@ -146,6 +146,20 @@ class PandaSocialNetwork
 	def how_many_gender_in_network(level, panda, gender) 
 		#returns the number of gender pandas (male of female) that in the panda network in that many levels deep.
 		# If level == 2, we will have to look in all friends of panda and all of their friends too. And count
+
+		friends = panda_book[panda.email]
+		counter_gender = 0
+		while level > 1
+			friends.each do |friend|
+				friends = friends | panda_book[friend.email]
+			end	
+				level -= 1
+		end
+		friends.each do |friend|
+			counter_gender +=1 if friend.gender == gender
+		end
+
+		counter_gender
 	end
 end
 
@@ -153,20 +167,29 @@ end
 
 ivo = Panda.new("Ivo", "ivo", "male")
 pivo = Panda.new("pivo", "pivo", "male")
-PSN = PandaSocialNetwork.new
-p PSN.add_panda(ivo)
-p PSN.add_panda(pivo)
-p PSN.has_panda(ivo)
-p PSN.has_panda(pivo)
+asd = Panda.new("asd", "asd", "male")
+qwe = Panda.new("qwe", "qwe", "male")
 jena1 = Panda.new("jena1", "jena1", "female")
 jena2 = Panda.new("jena2", "jena2", "female")
+jena3 = Panda.new("jena3", "jena3", "female")
+
+PSN = PandaSocialNetwork.new
+PSN.add_panda(ivo)
+PSN.add_panda(pivo)
+PSN.add_panda(jena3)
+PSN.add_panda(jena1)
+PSN.add_panda(jena2)
+PSN.add_panda(asd)
+PSN.add_panda(qwe)
+
+
 PSN.make_friends(jena1, pivo)
 PSN.make_friends(jena1, ivo)
 PSN.make_friends(jena2, ivo)
-p PSN.connection_level(jena2,pivo)
-jena3 = Panda.new("jena3", "jena3", "female")
-PSN.add_panda(jena3)
-p PSN.connection_level(jena3,pivo)
-p PSN.are_connected(jena3,pivo) 
-p PSN.are_connected(jena2,pivo) 
+PSN.make_friends(jena3, ivo)
+PSN.make_friends(ivo, pivo)
+PSN.make_friends(jena1, asd)
+PSN.make_friends(asd, qwe)
+PSN.make_friends(jena3, asd)
 
+puts PSN.how_many_gender_in_network(2, ivo, "female")
