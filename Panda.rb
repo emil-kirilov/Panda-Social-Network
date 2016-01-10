@@ -46,7 +46,6 @@ class PandaSocialNetwork
 		if has_panda panda
 			raise "There's already such panda in the network"
 		else
-			#trqbva da precenim kakvo da izpozlvame za kluch 
 			panda_book[panda.email] = Array.new
 		end
 
@@ -122,53 +121,6 @@ class PandaSocialNetwork
 			visited_pandas.push(panda_book[current_panda.email].flatten!)
 			return level if visited_pandas.include? panda2
 		end
-=begin
-		return false unless panda_book.has_key? panda1.email or panda_book.has_key? panda2.email
-		return 1 if are_friends(panda1, panda2)
-		return -1 if  panda_book[panda1.email].length == 0 or panda_book[panda2.email].length == 0
-		
-		panda1_friends = panda_book[panda1.email]
-		panda2_friends = panda_book[panda2.email]
-		
-		pandas_count = 0
-		panda_book.each do |key, value|
-			#this cycle will remove the pandas that have no friends from the counter
-			pandas_count += 1 if value.length > 0
-		end
-
-		connection_level = 1
-		continue = true
-		last_check = false
-		while continue
-			connection_level += 1
-			mutual_friends = panda1_friends & panda2_friends
-			if mutual_friends.length > 0 
-				return connection_level
-			else
-				return -1 if panda1_friends.length == pandas_count || panda2_friends.length == pandas_count
-				return -1 if last_check
-				temp_friends1 , temp_friends2 = [], []
-				
-				panda1_friends.each do |panda|
-					temp_friends1 = temp_friends1 | panda_book[panda.email]
-				end
-				temp_friends1 += panda1_friends
-				panda1_friends_at_max = true if temp_friends1.length == panda1_friends.length
-				panda1_friends = temp_friends1
-
-				panda2_friends.each do |panda|
-					temp_friends2 = temp_friends2 | panda_book[panda.email]
-				end
-				temp_friends2 += panda2_friends
-				panda2_friends_at_max = true if temp_friends2.length == panda2_friends.length
-				panda2_friends = temp_friends2
-				
-				if panda1_friends_at_max and panda2_friends_at_max
-					last_check = true
-				end
-			end
-		end
-=end
 	end
 	
 	def are_connected(panda1, panda2) 
@@ -190,8 +142,10 @@ class PandaSocialNetwork
 			friends.each do |friend|
 				friends = friends | panda_book[friend.email]
 			end	
-				level -= 1
+			level -= 1
 		end
+		
+		friends.delete(panda)
 		friends.each do |friend|
 			counter_gender +=1 if friend.gender == gender
 		end
