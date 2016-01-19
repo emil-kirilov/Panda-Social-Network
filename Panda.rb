@@ -1,3 +1,7 @@
+require 'json'
+require 'yaml'
+require 'xmlsimple'
+
 class Panda
 	attr_reader :name, :email, :gender
 	def initialize(name, email, gender)
@@ -31,14 +35,23 @@ class Panda
 		"Hello my name is #{name}. I am a healthy #{gender} individual so write to me on my email: #{email} "
 	end
 
+	def to_a
+		[].tap do |temp|
+			temp << name
+			temp << email
+			temp << gender
+		end
+	end
+
 	alias_method :eql?, :==
 end
 
 class PandaSocialNetwork
-	attr_reader :panda_book
+	attr_reader :panda_book, :hash_for_save
 
 	def initialize
 		@panda_book = {}
+		@hash_for_save = {}
 	end
 
 	def add_panda(panda)
@@ -46,7 +59,8 @@ class PandaSocialNetwork
 		if has_panda panda
 			raise "There's already such panda in the network"
 		else
-			panda_book[panda.email] = Array.new
+			panda_book[panda.email] = []
+			hash_for_save[panda.to_a] = []
 		end
 
 		panda_book
@@ -64,11 +78,15 @@ class PandaSocialNetwork
 		#If panda1 or panda2 are not members of the network, add them!
 		raise 'PandasAlreadyFriends' if are_friends(panda1, panda2)
 
-		panda_book[panda1.email] = Array.new if !has_panda panda1			
-		panda_book[panda2.email] = Array.new if !has_panda panda2
+		panda_book[panda1.email] = [] if !has_panda panda1
+		panda_book[panda2.email] = [] if !has_panda panda2
+		panda_book[panda1.email] << panda2
+		panda_book[panda2.email] << panda1
 
-		panda_book[panda1.email].push panda2
-		panda_book[panda2.email].push panda1
+		hash_for_save[panda1.to_a] = [] if !hash_for_save.has_key? panda1.to_a			
+		hash_for_save[panda2.to_a] = [] if !hash_for_save.has_key? panda2.to_a
+		hash_for_save[panda1.to_a] << panda2.to_a
+		hash_for_save[panda2.to_a] << panda1.to_a
 		
 		panda_book
 	end
@@ -76,8 +94,8 @@ class PandaSocialNetwork
 	def are_friends(panda1, panda2) 
 		#- returns true if the pandas are friends. Otherwise, false
 		are_friends = false
-		panda_book[panda1.email] = Array.new if !has_panda panda1
-		panda_book[panda2.email] = Array.new if !has_panda panda2
+		panda_book[panda1.email] = [] if !has_panda panda1
+		panda_book[panda2.email] = [] if !has_panda panda2
 		
 		are_friends = true if panda_book[panda1.email].include? panda2
 		are_friends
@@ -107,7 +125,7 @@ class PandaSocialNetwork
 		level = -1
 		boolean = true
 		last_panda_of_current_level = Panda.new('empty','shit','panda')
-		q.push(panda1)
+		q << (panda1)
 		while !q.empty?
 			if boolean
 				last_panda_of_current_level = q.last
@@ -116,9 +134,9 @@ class PandaSocialNetwork
 			end
 			current_panda = q.pop
 			boolean = true if current_panda == last_panda_of_current_level
-			visited_pandas.push(current_panda)
-			q.push(panda_book[current_panda.email] - visited_pandas).flatten!
-			visited_pandas.push(panda_book[current_panda.email].flatten!)
+			visited_pandas << (current_panda)
+			q << (panda_book[current_panda.email] - visited_pandas).flatten!
+			visited_pandas << (panda_book[current_panda.email].flatten!)
 			return level if visited_pandas.include? panda2
 		end
 	end
@@ -152,6 +170,46 @@ class PandaSocialNetwork
 
 		counter_gender
 	end
+
+	def save(string)
+	# valid parameters are: "json", "yaml", "xml", "emo"	
+		case string
+		when "json"
+			json = Json.new
+			json.save(hash_for_save)
+		when "yaml"
+			yaml = Yaml.new
+			yaml.save(hash_for_save)
+		when "xml"
+			xml = Xml.new
+			xml.save(hash_for_save)
+		when "emo"
+			emo = Emo.new
+			emo.save(hash_for_save)
+		else
+			puts "Not a valid save format"
+		end
+	end
+
+	def load(string)
+	# valid parameters are: "json", "yaml", "xml", "emo"		
+		case string
+		when "json"
+			json = Json.new
+			json.load
+		when "yaml"
+			yaml = Yaml.new
+			yaml.load
+		when "xml"
+			xml = Xml.new
+			xml.load
+		when "emo"
+			emo = Emo.new
+			emo.load
+		else
+			puts "Not a valid load format"
+		end
+	end
 end
 
 class Queue
@@ -161,7 +219,7 @@ class Queue
 	end
 
 	def push(panda)
-		queue.push(panda)
+		queue << (panda)
 	end
 
 	def pop
@@ -182,3 +240,96 @@ class Queue
 		queue[queue.length - 1] if !empty?
 	end
 end
+
+class Json
+	def initialize
+	end
+
+	def save(hash_for_save)
+		File.open("panda_save_json.json","w+") do |f|
+  		f.write(hash_for_save.to_json)
+		end
+		hash_for_save
+	end
+
+	def load
+		file = File.read("panda_save_json.json")
+		panda_hash = JSON.parse(file)
+		panda_hash
+	end
+end
+
+class Emo
+	def initialize
+	end
+
+	def save(hash_for_save)
+		archive = File.new("panda_save.txt", "w+")
+		
+		hash_for_save.each_pair do |key, value|
+			archive.puts "#{key} == #{value}"
+		end
+
+		archive.close
+		archive
+	end
+
+	def load
+		psn = PandaSocialNetwork.new
+
+		archive = File.open("panda_save.txt")
+		find = /\[(.*)\]\s\=\=\s\[(\[.*\])\]/
+		find_name_email_gender = /\"(\w*)\"\,\s\"(\w*\@\w*\.\w*)\"\,\s\"(\w*)\"/
+		find_each_friend = /\[(\"\w*\"\,\s\"\w*\@\w*\.\w*\"\,\s\"\w*\")\]\,?\s?/
+		
+		archive.each do |line|
+			panda, friends_of_panda = find.match(line).captures
+
+			name, email, gender = find_name_email_gender.match(panda).captures
+			add_to_netwrok = Panda.new name, email, gender
+			psn.add_panda(add_to_netwrok) unless psn.has_panda add_to_netwrok
+				
+			friends_of_panda.scan(find_each_friend) do |panda|
+				name, email, gender = find_name_email_gender.match(panda[0]).captures
+				make_friends_with_panda = Panda.new name, email, gender
+				psn.make_friends(add_to_netwrok, make_friends_with_panda) unless psn.are_friends(add_to_netwrok, make_friends_with_panda)
+			end
+		end
+		psn
+	end 
+end
+
+class Yaml
+	def save(hash_for_save)
+		File.open("panda_save_yaml.yml", "w+") do |fyaml|
+  		fyaml.write hash_for_save.to_yaml
+		end
+		hash_for_save
+	end
+
+	def load
+		fyaml = YAML::load_file "panda_save_yaml.yml"
+		panda_hash = fyaml.inspect
+		panda_hash
+	end
+end
+
+class Xml
+	def save(hash_for_save)
+		fxml = File.open("panda_save_xml.xml", "w+")
+		fxml = XmlSimple.xml_in("panda_save_xml.xml", hash_for_save.to_xml)
+		fxml
+	end
+
+	def load
+	end
+end
+
+p = PandaSocialNetwork.new
+ivo = Panda.new("Ivo", "ivo@pandamail.com", "male")
+ivo1 = Panda.new("Ivo1", "ivo1@pandamail.com", "male")
+ivo2 = Panda.new("Ivo2", "ivo2@pandamail.com", "male")
+p.make_friends(ivo, ivo1)
+p.make_friends(ivo, ivo2)
+p.save("xml")
+p.load("11yaml")
